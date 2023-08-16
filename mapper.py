@@ -2,38 +2,39 @@ import sys
 import io
 import re
 import nltk
-nltk.download('stopwords',quiet=True)
 from nltk.corpus import stopwords
-punctuations = '''!()-[]{};:'"\,<>./?@#$%^&*_~'''
-stop_words = set(stopwords.words('english'))
-input_stream = io.TextIOWrapper(sys.stdin.buffer, encoding='latin1')
+from nltk.tokenize import word_tokenize
+from collections import defaultdict
+import string
+
+nltk.download('punkt', quiet=True)
+nltk.download('stopwords', quiet=True)
 
 class Mapper:
 
-  def __init__(self):
-    self.array= dict()
+    def __init__(self):
+        self.word_counts = defaultdict(int)
+        self.punctuations = set(string.punctuation)
+        self.stop_words = set(stopwords.words('english'))
 
-  def Map(self):
-    for line in input_stream:
-      line = line.strip()
-      line = re.sub(r'[^\w\s]', '',line)
-      line = line.lower()
+    def Map(self):
+        input_stream = io.TextIOWrapper(sys.stdin.buffer, encoding='latin1')
+        for line in input_stream:
+            line = line.strip().lower()
+            line = re.sub(r'[^\w\s]', '', line)
 
-      for x in line:
-        if x in punctuations:
-          line=line.replace(x, " ") 
+            for x in line:
+                if x in self.punctuations:
+                    line = line.replace(x, " ")
 
-      words=line.split()
-      for word in words: 
-        if word not in stop_words:
-          if word in self.array.keys():
-              self.array[word] = self.array[word] + 1
-          else:
-              self.array[word] = 1
+            words = word_tokenize(line)
+            for word in words:
+                if word not in self.stop_words:
+                    self.word_counts[word] += 1
 
-  def Close(self):
-    for term in self.array.keys():
-          print("%s\t%s" % (term, self.array[term]))
+    def Close(self):
+        for term, count in self.word_counts.items():
+            print("%s\t%s" % (term, count))
 
 
 if __name__ == "__main__":
